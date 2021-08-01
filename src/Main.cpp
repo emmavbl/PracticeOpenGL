@@ -92,23 +92,37 @@ int main(void)
     glDeleteShader(fragmentShader);
 
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
+         0.5f,  0.5f, 0.0f,  // top right
+         0.5f, -0.5f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f,  // bottom left
+        -0.5f,  0.5f, 0.0f   // top left 
+    };
+    unsigned int indices[] = { 
+        0, 1, 3,   // first triangle
+        1, 2, 3    // second triangle
     };
 
     // Generate VBO and VAO 
     unsigned int VBO; 
     unsigned int VAO;
+    unsigned int EBO;
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &EBO);
+
     glBindVertexArray(VAO);// Bind VAO
         glBindBuffer(GL_ARRAY_BUFFER, VBO);// Bind VBO
-            // Load vertices' data to the VBO
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+            // Bind EBO and load indices data
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
             // Configure OpenGl's vertices reading in VBO
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
             glEnableVertexAttribArray(0);
+
+            // Do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+            //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
     glBindVertexArray(0); // Unbind VAO
 
@@ -130,7 +144,7 @@ int main(void)
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         // Draw
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         // glBindVertexArray(0); // no need to unbind it every time 
 
         // Check events and swap buffers
