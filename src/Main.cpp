@@ -92,8 +92,8 @@ int main(void)
 
         // update shader uniform
         float timeValue = glfwGetTime();
-        float alphaValue = sin(timeValue) / 2.0f + 0.5f;
-        shaderProgram.setFloat("myAlphaValue", alphaValue);
+        float value = sin(timeValue) / 2.0f + 0.5f;
+        shaderProgram.setFloat("myValue", value);
 
         glBindVertexArray(VAO);
         // Draw
