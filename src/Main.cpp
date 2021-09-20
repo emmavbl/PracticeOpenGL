@@ -11,18 +11,26 @@ const unsigned int SCR_WIDTH = 1200;
 const char* vertexShaderSource = 
 "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec3 aColor;\n"
+
+"out vec3 myColor;\n"
+
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"   myColor = aColor;\n"
 "}\0";
 
 const char* fragmentShaderSource =
 "#version 330 core\n"
 "out vec4 FragColor;\n"
+"in vec3 myColor;\n"
+"uniform float myAlphaValue;\n"
 
 "void main()"
 "{\n"
-"    FragColor = vec4(0.866f, 0.537f, 0.211f, 1.0f);\n"
+//"    FragColor = vec4(0.866f, 0.537f, 0.211f, 1.0f);\n"
+"    FragColor = vec4(myColor, 1.0) * myAlphaValue;\n"
 "}\0";
 
 
@@ -92,10 +100,11 @@ int main(void)
     glDeleteShader(fragmentShader);
 
     float vertices[] = {
-         0.5f,  0.5f, 0.0f,  // top right
-         0.5f, -0.5f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  // bottom left
-        -0.5f,  0.5f, 0.0f   // top left 
+        // position             //color
+         0.5f,  0.5f, 0.0f,     1.0, 1.0, 0.0, // top right
+         0.5f, -0.5f, 0.0f,     0.0, 1.0, 1.0, // bottom right
+        -0.5f, -0.5f, 0.0f,     0.0, 1.0, 0.0, // bottom left
+        -0.5f,  0.5f, 0.0f,     1.0, 0.0, 0.0  // top left 
     };
     unsigned int indices[] = { 
         0, 1, 3,   // first triangle
@@ -118,8 +127,12 @@ int main(void)
                 glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
             // Configure OpenGl's vertices reading in VBO
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+                // position Attributes
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
             glEnableVertexAttribArray(0);
+                // color Attributes
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (3* sizeof(float)));
+            glEnableVertexAttribArray(1);
 
             // Do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
             //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -142,6 +155,13 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
+
+        // update shader uniform
+        float timeValue = glfwGetTime();
+        float alphaValue = sin(timeValue) / 2.0f + 0.5f;
+        int alphaLocation = glGetUniformLocation(shaderProgram, "myAlphaValue");
+        glUniform1f(alphaLocation, alphaValue);
+
         glBindVertexArray(VAO);
         // Draw
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
